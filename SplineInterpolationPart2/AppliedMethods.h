@@ -1,3 +1,5 @@
+#include "InitialFunctions.h"
+
 #pragma region Enumerations
 /// <summary>
 /// Производная, через которую представляем сплайн, и тип краевых условий
@@ -20,47 +22,22 @@ enum class BuildingSplineType {
 	BuildingSplineUsingFirstDerivative,
 	BuildingSplineUsingSecondDerivative
 };
-#pragma endregion
 
-#pragma region InitialFunctions
-
-#pragma region SplineDerivativesOfSingleVariable
 /// <summary>
-/// Точное значение функции f в точке x
+/// Фиксируемая переменная 
 /// </summary>
-double ExactSolution(double x) {
-	return cos(3 * x - 7) * log(2 * x + 3) + sin(5 * x - 3);
-	//return cos(3*x);
-}
-
-/// <summary>
-/// Точное значение первой производной
-///  </summary>
-double FirstDerivative(double x) {
-	return 5 * cos(3 - 5 * x) + 3 * log(3 + 2 * x) * sin(7 - 3 * x) + 2 * cos(7 - 3 * x) / (3 + 2 * x);
-	//return -3*sin(3*x);
-}
-
-/// <summary>
-/// Точное значение второй производной
-///  </summary>
-double SecondDerivative(double x) {
-	return 25 * sin(3 - 5 * x) + 12 * sin(7 - 3 * x) / (3 + 2 * x) - cos(7 - 3 * x) * (4 / pow(3 + 2 * x, 2) + 9 * log(3 + 2 * x));
-	//return -9*cos(3*x);
-}
-#pragma endregion
-
-#pragma region SplineDerivativesOfTwoVariables
-
-#pragma endregion
-
+enum class FixedVariableType {
+	FixedVariableX,
+	FixedVariableY,
+	SecondCycle
+};
 #pragma endregion
 
 #pragma region BoundaryConditions
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа I
 /// </summary>
-void BuildingTridiagonalMatrixFirstDerivType1(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixFirstDerivType1(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[0][0] = 1;												// coef for m_0
 	matrix[0][1] = 0;												// coef for m_1
@@ -73,18 +50,38 @@ void BuildingTridiagonalMatrixFirstDerivType1(double* x, int n, double* h, doubl
 		matrix[i][i + 1] = h[i - 1] / (h[i - 1] + h[i]);			//coef for m_i+1 -  \mu_i
 	}
 
-	d[0] = FirstDerivative(x[0]);
-	d[n] = FirstDerivative(x[n]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[0] = PartialDerivative01(FixedVariableValue, x[0]);
+		d[n] = PartialDerivative01(FixedVariableValue, x[n]);
 
-	for (int i = 1; i < n; i++) {
-		d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1]) - ExactSolution(x[i])) / (h[i - 1] + h[i]) / h[i] + h[i] * (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / (h[i - 1] + h[i]) / h[i] + h[i] 
+				* (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[0] = PartialDerivative10(x[0], FixedVariableValue);
+		d[n] = PartialDerivative10(x[n], FixedVariableValue);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i] + h[i]
+				* (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else {
+		d[0] = MixedPartialDerivative11(x[0], FixedVariableValue);
+		d[n] = MixedPartialDerivative11(x[n], FixedVariableValue);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (coefM[i + 1] - coefM[i]) / (h[i - 1] + h[i]) / h[i] + h[i] * (coefM[i] - coefM[i - 1]) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
 	}
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа II
 /// </summary>
-void BuildingTridiagonalMatrixFirstDerivType2(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixFirstDerivType2(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[0][0] = 2;												// coef for m_0
 	matrix[0][1] = 1;												// coef for m_1
@@ -97,18 +94,39 @@ void BuildingTridiagonalMatrixFirstDerivType2(double* x, int n, double* h, doubl
 		matrix[i][i + 1] = h[i - 1] / (h[i - 1] + h[i]);			//coef for m_i+1 -  \mu_i
 	}
 
-	d[0] = 3 * (ExactSolution(x[1]) - ExactSolution(x[0])) / h[0] - 0.5 * h[0] * SecondDerivative(x[0]);
-	d[n] = 3 * (ExactSolution(x[n]) - ExactSolution(x[n - 1])) / h[n - 1] - 0.5 * h[n - 1] * SecondDerivative(x[n]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[0] = 3 * (ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / h[0] - 0.5 * h[0] * PartialDerivative02(FixedVariableValue, x[0]);
+		d[n] = 3 * (ExactSolution(FixedVariableValue, x[n]) - ExactSolution(FixedVariableValue, x[n - 1])) / h[n - 1] - 0.5 * h[n - 1] * PartialDerivative02(FixedVariableValue, x[n]);
 
-	for (int i = 1; i < n; i++) {
-		d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1]) - ExactSolution(x[i])) / (h[i - 1] + h[i]) / h[i] + h[i] * (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / (h[i - 1] + h[i]) / h[i] + h[i] 
+				* (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
 	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[0] = 3 * (ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / h[0] - 0.5 * h[0] * PartialDerivative20(x[0], FixedVariableValue);
+		d[n] = 3 * (ExactSolution(x[n], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / h[n - 1] - 0.5 * h[n - 1] * PartialDerivative20(x[n], FixedVariableValue);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i] + h[i] 
+				* (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else {
+		d[0] = 3 * (coefM[1] - coefM[0]) / h[0] - 0.5 * h[0] * MixedPartialDerivative22(x[0], FixedVariableValue);
+		d[n] = 3 * (coefM[n] - coefM[n - 1]) / h[n - 1] - 0.5 * h[n - 1] * MixedPartialDerivative22(x[n], FixedVariableValue);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (coefM[i + 1] - coefM[i]) / (h[i - 1] + h[i]) / h[i] + h[i]	* (coefM[i] - coefM[i - 1]) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа III
 /// </summary>
-void BuildingTridiagonalMatrixFirstDerivType3(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixFirstDerivType3(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[1][1] = 2;												// coef for m_1
 	matrix[1][2] = h[0] / (h[0] + h[1]);							// coef for m_2
@@ -123,17 +141,37 @@ void BuildingTridiagonalMatrixFirstDerivType3(double* x, int n, double* h, doubl
 		matrix[i][i + 1] = h[i - 1] / (h[i - 1] + h[i]);			//coef for m_i+1 -  \mu_i
 	}
 
-	d[n] = 3 * (h[n - 1] * (ExactSolution(x[1]) - ExactSolution(x[0])) / (h[n - 1] + h[0]) / h[0] + h[0] * (ExactSolution(x[0]) - ExactSolution(x[n - 1])) / (h[n - 1] + h[0]) / h[n - 1]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[n] = 3 * (h[n - 1] * (ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / (h[n - 1] + h[0]) / h[0] + h[0]
+			* (ExactSolution(FixedVariableValue, x[0]) - ExactSolution(FixedVariableValue, x[n - 1])) / (h[n - 1] + h[0]) / h[n - 1]);
 
-	for (int i = 1; i < n; i++) {
-		d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1]) - ExactSolution(x[i])) / (h[i - 1] + h[i]) / h[i] + h[i] * (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / (h[i - 1] + h[i]) / h[i] + h[i]
+				* (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[n] = 3 * (h[n - 1] * (ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / (h[n - 1] + h[0]) / h[0] + h[0]
+			* (ExactSolution(x[0], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / (h[n - 1] + h[0]) / h[n - 1]);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i] + h[i]
+				* (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else {
+		d[n] = 3 * (h[n - 1] * (coefM[1] - coefM[0]) / (h[n - 1] + h[0]) / h[0] + h[0] * (coefM[0] - coefM[n - 1]) / (h[n - 1] + h[0]) / h[n - 1]);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 3 * (h[i - 1] * (coefM[i + 1] - coefM[i]) / (h[i - 1] + h[i]) / h[i] + h[i] * (coefM[i] - coefM[i - 1]) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
 	}
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа IV
 /// </summary>
-void BuildingTridiagonalMatrixFirstDerivType4(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixFirstDerivType4(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[0][0] = 1;												// coef for m_0
 	matrix[0][1] = 1 - pow(h[0] / h[1], 2);							// coef for m_1
@@ -152,20 +190,52 @@ void BuildingTridiagonalMatrixFirstDerivType4(double* x, int n, double* h, doubl
 		matrix[i][i + 1] = h[i - 1] / (h[i - 1] + h[i]);			//coef for m_i+1 -  \mu_i
 	}
 
-	d[0] = 2 * ((ExactSolution(x[1]) - ExactSolution(x[0])) / h[0] - pow(h[0] / h[1], 2) * (ExactSolution(x[2]) - ExactSolution(x[1])) / h[1]);
-	d[1] = (h[0] / (h[0] + h[1]) + 2 * h[0] / h[1]) * (ExactSolution(x[2]) - ExactSolution(x[1])) / h[1] + h[1] * (ExactSolution(x[1]) - ExactSolution(x[0])) / (h[0] + h[1]) / h[0];
-	d[n - 1] = h[n - 2] * (ExactSolution(x[n]) - ExactSolution(x[n - 1])) / (h[n - 2] + h[n - 1]) / h[n - 1] + (h[n - 1] / (h[n - 2] + h[n - 1]) + 2 * h[n - 1] / h[n - 2]) * (ExactSolution(x[n - 1]) - ExactSolution(x[n - 2])) / h[n - 2];
-	d[n] = 2 * ((ExactSolution(x[n]) - ExactSolution(x[n - 1])) / h[n - 1] - pow(h[n - 1] / h[n - 2], 2) * (ExactSolution(x[n - 1]) - ExactSolution(x[n - 2])) / h[n - 2]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[0] = 2 * ((ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / h[0] - pow(h[0] / h[1], 2) 
+			* (ExactSolution(FixedVariableValue, x[2]) - ExactSolution(FixedVariableValue, x[1])) / h[1]);
+		d[1] = (h[0] / (h[0] + h[1]) + 2 * h[0] / h[1]) * (ExactSolution(FixedVariableValue, x[2]) - ExactSolution(FixedVariableValue, x[1])) / h[1] + h[1]
+			* (ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / (h[0] + h[1]) / h[0];
+		d[n - 1] = h[n - 2] * (ExactSolution(FixedVariableValue, x[n]) - ExactSolution(FixedVariableValue, x[n - 1])) / (h[n - 2] + h[n - 1]) / h[n - 1] + (h[n - 1] / (h[n - 2] + h[n - 1]) 
+			+ 2 * h[n - 1] / h[n - 2]) * (ExactSolution(FixedVariableValue, x[n - 1]) - ExactSolution(FixedVariableValue, x[n - 2])) / h[n - 2];
+		d[n] = 2 * ((ExactSolution(FixedVariableValue, x[n]) - ExactSolution(FixedVariableValue, x[n - 1])) / h[n - 1] - pow(h[n - 1] / h[n - 2], 2) 
+			* (ExactSolution(FixedVariableValue, x[n - 1]) - ExactSolution(FixedVariableValue, x[n - 2])) / h[n - 2]);
 
-	for (int i = 2; i < n - 1; i++) {
-		d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1]) - ExactSolution(x[i])) / (h[i - 1] + h[i]) / h[i] + h[i] * (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		for (int i = 2; i < n - 1; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / (h[i - 1] + h[i]) / h[i] + h[i]
+				* (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[0] = 2 * ((ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / h[0] - pow(h[0] / h[1], 2) 
+			* (ExactSolution(x[2], FixedVariableValue) - ExactSolution(x[1], FixedVariableValue)) / h[1]);
+		d[1] = (h[0] / (h[0] + h[1]) + 2 * h[0] / h[1]) * (ExactSolution(x[2], FixedVariableValue) - ExactSolution(x[1], FixedVariableValue)) / h[1] + h[1] 
+			* (ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / (h[0] + h[1]) / h[0];
+		d[n - 1] = h[n - 2] * (ExactSolution(x[n], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / (h[n - 2] + h[n - 1]) / h[n - 1] + (h[n - 1] / (h[n - 2] + h[n - 1]) 
+			+ 2 * h[n - 1] / h[n - 2]) * (ExactSolution(x[n - 1], FixedVariableValue) - ExactSolution(x[n - 2], FixedVariableValue)) / h[n - 2];
+		d[n] = 2 * ((ExactSolution(x[n], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / h[n - 1] - pow(h[n - 1] / h[n - 2], 2) 
+			* (ExactSolution(x[n - 1], FixedVariableValue) - ExactSolution(x[n - 2], FixedVariableValue)) / h[n - 2]);
+
+		for (int i = 2; i < n - 1; i++) {
+			d[i] = 3 * (h[i - 1] * (ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i] + h[i] 
+				* (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
+	}
+	else {
+		d[0] = 2 * ((coefM[1] - coefM[0]) / h[0] - pow(h[0] / h[1], 2) * (coefM[2] - coefM[1]) / h[1]);
+		d[1] = (h[0] / (h[0] + h[1]) + 2 * h[0] / h[1]) * (coefM[2] - coefM[1]) / h[1] + h[1] * (coefM[1] - coefM[0]) / (h[0] + h[1]) / h[0];
+		d[n - 1] = h[n - 2] * (coefM[n] - coefM[n - 1]) / (h[n - 2] + h[n - 1]) / h[n - 1] + (h[n - 1] / (h[n - 2] + h[n - 1]) + 2 * h[n - 1] / h[n - 2]) * (coefM[n - 1] - coefM[n - 2]) / h[n - 2];
+		d[n] = 2 * ((coefM[n] - coefM[n - 1]) / h[n - 1] - pow(h[n - 1] / h[n - 2], 2)	* (coefM[n - 1] - coefM[n - 2]) / h[n - 2]);
+
+		for (int i = 2; i < n - 1; i++) {
+			d[i] = 3 * (h[i - 1] * (coefM[i + 1] - coefM[i]) / (h[i - 1] + h[i]) / h[i] + h[i] * (coefM[i] - coefM[i - 1]) / (h[i - 1] + h[i]) / h[i - 1]);
+		}
 	}
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа I
 /// </summary>
-void BuildingTridiagonalMatrixSecondDerivType1(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixSecondDerivType1(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[0][0] = 2;												// coef for M_0
 	matrix[0][1] = 1;												// coef for M_1
@@ -178,18 +248,38 @@ void BuildingTridiagonalMatrixSecondDerivType1(double* x, int n, double* h, doub
 		matrix[i][i + 1] = h[i] / (h[i - 1] + h[i]);				//coef for M_i+1 -  \lambda_i
 	}
 
-	d[0] = 6 * ((ExactSolution(x[1]) - ExactSolution(x[0])) / h[0] - FirstDerivative(x[0])) / h[0];
-	d[n] = 6 * (FirstDerivative(x[n]) - (ExactSolution(x[n]) - ExactSolution(x[n - 1])) / h[n - 1]) / h[n - 1];
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[0] = 6 * ((ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / h[0] - PartialDerivative01(FixedVariableValue, x[0])) / h[0];
+		d[n] = 6 * (PartialDerivative01(FixedVariableValue, x[n]) - (ExactSolution(FixedVariableValue, x[n]) - ExactSolution(FixedVariableValue, x[n - 1])) / h[n - 1]) / h[n - 1];
 
-	for (int i = 1; i < n; i++) {
-		d[i] = 6 * ((ExactSolution(x[i + 1]) - ExactSolution(x[i])) / h[i] - (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / h[i] 
+				- (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[0] = 6 * ((ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / h[0] - PartialDerivative10(x[0], FixedVariableValue)) / h[0];
+		d[n] = 6 * (PartialDerivative10(x[n], FixedVariableValue) - (ExactSolution(x[n], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / h[n - 1]) / h[n - 1];
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / h[i] 
+				- (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else {
+		d[0] = 6 * ((coefM[1] - coefM[0]) / h[0] - MixedPartialDerivative11(x[0], FixedVariableValue)) / h[0];
+		d[n] = 6 * (MixedPartialDerivative11(x[n], FixedVariableValue) - (coefM[n] - coefM[n - 1]) / h[n - 1]) / h[n - 1];
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((coefM[i + 1] - coefM[i]) / h[i] - (coefM[i] - coefM[i - 1]) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
 	}
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа II
 /// </summary>
-void BuildingTridiagonalMatrixSecondDerivType2(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixSecondDerivType2(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[0][0] = 1;												// coef for M_0
 	matrix[0][1] = 0;												// coef for M_1
@@ -202,18 +292,38 @@ void BuildingTridiagonalMatrixSecondDerivType2(double* x, int n, double* h, doub
 		matrix[i][i + 1] = h[i] / (h[i - 1] + h[i]);				//coef for M_i+1 -  \lambda_i
 	}
 
-	d[0] = SecondDerivative(x[0]);
-	d[n] = SecondDerivative(x[n]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[0] = PartialDerivative02(FixedVariableValue, x[0]);
+		d[n] = PartialDerivative02(FixedVariableValue, x[n]);
 
-	for (int i = 1; i < n; i++) {
-		d[i] = 6 * ((ExactSolution(x[i + 1]) - ExactSolution(x[i])) / h[i] - (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / h[i] 
+				- (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[0] = PartialDerivative20(x[0], FixedVariableValue);
+		d[n] = PartialDerivative20(x[n], FixedVariableValue);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / h[i] 
+				- (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else {
+		d[0] = MixedPartialDerivative22(x[0], FixedVariableValue);
+		d[n] = MixedPartialDerivative22(x[n], FixedVariableValue);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((coefM[i + 1] - coefM[i]) / h[i] - (coefM[i] - coefM[i - 1]) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
 	}
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа III
 /// </summary>
-void BuildingTridiagonalMatrixSecondDerivType3(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixSecondDerivType3(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[1][1] = 2;															// coef for M_1
 	matrix[1][2] = h[1] / (h[0] + h[1]);										// coef for M_2
@@ -228,17 +338,37 @@ void BuildingTridiagonalMatrixSecondDerivType3(double* x, int n, double* h, doub
 		matrix[i][i + 1] = h[i] / (h[i - 1] + h[i]);							//coef for M_i+1 -  \lambda_i
 	}
 
-	d[n] = 6 * ((ExactSolution(x[1]) - ExactSolution(x[0])) / h[0] - (ExactSolution(x[0]) - ExactSolution(x[n - 1])) / h[n - 1]) / (h[n - 1] + h[0]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[n] = 6 * ((ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / h[0] 
+			- (ExactSolution(FixedVariableValue, x[0]) - ExactSolution(FixedVariableValue, x[n - 1])) / h[n - 1]) / (h[n - 1] + h[0]);
 
-	for (int i = 1; i < n; i++) {
-		d[i] = 6 * ((ExactSolution(x[i + 1]) - ExactSolution(x[i])) / h[i] - (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / h[i] 
+				- (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[n] = 6 * ((ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / h[0] 
+			- (ExactSolution(x[0], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / h[n - 1]) / (h[n - 1] + h[0]);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / h[i] 
+				- (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else {
+		d[n] = 6 * ((coefM[1] - coefM[0]) / h[0] - (coefM[0] - coefM[n - 1]) / h[n - 1]) / (h[n - 1] + h[0]);
+
+		for (int i = 1; i < n; i++) {
+			d[i] = 6 * ((coefM[i + 1] - coefM[i]) / h[i] - (coefM[i] - coefM[i - 1]) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
 	}
 }
 
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа IV
 /// </summary>
-void BuildingTridiagonalMatrixSecondDerivType4(double* x, int n, double* h, double** matrix, double* d) {
+void BuildingTridiagonalMatrixSecondDerivType4(double* x, int n, double* h, double** matrix, double* d, double FixedVariableValue, FixedVariableType FixedVariable, double* coefM) {
 
 	matrix[0][0] = 1;															// coef for M_0
 	matrix[0][1] = -(h[0] + h[1]) / h[1];										// coef for M_1
@@ -257,11 +387,35 @@ void BuildingTridiagonalMatrixSecondDerivType4(double* x, int n, double* h, doub
 		matrix[i][i + 1] = h[i] / (h[i - 1] + h[i]);							//coef for M_i+1 -  \lambda_i
 	}
 
-	d[1] = 6 * h[1] * ((ExactSolution(x[2]) - ExactSolution(x[1])) / h[1] - (ExactSolution(x[1]) - ExactSolution(x[0])) / h[0]) / pow(h[0] + h[1], 2);
-	d[n - 1] = 6 * h[n - 2] * ((ExactSolution(x[n]) - ExactSolution(x[n - 1])) / h[n - 1] - (ExactSolution(x[n - 1]) - ExactSolution(x[n - 2])) / h[n - 2]) / pow(h[n - 2] + h[n - 1], 2);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		d[1] = 6 * h[1] * ((ExactSolution(FixedVariableValue, x[2]) - ExactSolution(FixedVariableValue, x[1])) / h[1] 
+			- (ExactSolution(FixedVariableValue, x[1]) - ExactSolution(FixedVariableValue, x[0])) / h[0]) / pow(h[0] + h[1], 2);
+		d[n - 1] = 6 * h[n - 2] * ((ExactSolution(FixedVariableValue, x[n]) - ExactSolution(FixedVariableValue, x[n - 1])) / h[n - 1] 
+			- (ExactSolution(FixedVariableValue, x[n - 1]) - ExactSolution(FixedVariableValue, x[n - 2])) / h[n - 2]) / pow(h[n - 2] + h[n - 1], 2);
 
-	for (int i = 2; i < n - 1; i++) {
-		d[i] = 6 * ((ExactSolution(x[i + 1]) - ExactSolution(x[i])) / h[i] - (ExactSolution(x[i]) - ExactSolution(x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		for (int i = 2; i < n - 1; i++) {
+			d[i] = 6 * ((ExactSolution(FixedVariableValue, x[i + 1]) - ExactSolution(FixedVariableValue, x[i])) / h[i] 
+				- (ExactSolution(FixedVariableValue, x[i]) - ExactSolution(FixedVariableValue, x[i - 1])) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		d[1] = 6 * h[1] * ((ExactSolution(x[2], FixedVariableValue) - ExactSolution(x[1], FixedVariableValue)) / h[1] 
+			- (ExactSolution(x[1], FixedVariableValue) - ExactSolution(x[0], FixedVariableValue)) / h[0]) / pow(h[0] + h[1], 2);
+		d[n - 1] = 6 * h[n - 2] * ((ExactSolution(x[n], FixedVariableValue) - ExactSolution(x[n - 1], FixedVariableValue)) / h[n - 1] 
+			- (ExactSolution(x[n - 1], FixedVariableValue) - ExactSolution(x[n - 2], FixedVariableValue)) / h[n - 2]) / pow(h[n - 2] + h[n - 1], 2);
+
+		for (int i = 2; i < n - 1; i++) {
+			d[i] = 6 * ((ExactSolution(x[i + 1], FixedVariableValue) - ExactSolution(x[i], FixedVariableValue)) / h[i] 
+				- (ExactSolution(x[i], FixedVariableValue) - ExactSolution(x[i - 1], FixedVariableValue)) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
+	}
+	else {
+		d[1] = 6 * h[1] * ((coefM[2] - coefM[1]) / h[1]	- (coefM[1] - coefM[0]) / h[0]) / pow(h[0] + h[1], 2);
+		d[n - 1] = 6 * h[n - 2] * ((coefM[n] - coefM[n - 1]) / h[n - 1]	- (coefM[n - 1] - coefM[n - 2]) / h[n - 2]) / pow(h[n - 2] + h[n - 1], 2);
+
+		for (int i = 2; i < n - 1; i++) {
+			d[i] = 6 * ((coefM[i + 1] - coefM[i]) / h[i] - (coefM[i] - coefM[i - 1]) / h[i - 1]) / (h[i - 1] + h[i]);
+		}
 	}
 }
 #pragma endregion
@@ -270,7 +424,7 @@ void BuildingTridiagonalMatrixSecondDerivType4(double* x, int n, double* h, doub
 /// <summary>
 /// Метод прогонки
 /// </summary>
-void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentationType bonCond) {
+void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentationType bonCond, double FixedVariableValue, FixedVariableType FixedVariable, double* tempCoefM) {
 
 	double* alpha = new double[n]();
 	double* beta = new double[n]();
@@ -281,33 +435,44 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 		matrix[i] = new double[n + 1]();
 	}
 
-	coefM[0] = ExactSolution(x[0]);
-	coefM[n] = ExactSolution(x[n]);
+	if (FixedVariable == FixedVariableType::FixedVariableX) {
+		coefM[0] = ExactSolution(FixedVariableValue, x[0]);
+		coefM[n] = ExactSolution(FixedVariableValue, x[n]);
+	}
+	else if (FixedVariable == FixedVariableType::FixedVariableY) {
+		coefM[0] = ExactSolution(x[0], FixedVariableValue);
+		coefM[n] = ExactSolution(x[n], FixedVariableValue);
+	}
+	else {
+		coefM[0] = tempCoefM[0];
+		coefM[n] = tempCoefM[n];
+	}
+	
 
 	switch (bonCond) {
 	case SplineRepresentationType::throughFirstDerivativeType1:
-		BuildingTridiagonalMatrixFirstDerivType1(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixFirstDerivType1(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughFirstDerivativeType2:
-		BuildingTridiagonalMatrixFirstDerivType2(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixFirstDerivType2(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughFirstDerivativeType3:
-		BuildingTridiagonalMatrixFirstDerivType3(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixFirstDerivType3(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughFirstDerivativeType4:
-		BuildingTridiagonalMatrixFirstDerivType4(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixFirstDerivType4(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughSecondDerivativeType1:
-		BuildingTridiagonalMatrixSecondDerivType1(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixSecondDerivType1(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughSecondDerivativeType2:
-		BuildingTridiagonalMatrixSecondDerivType2(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixSecondDerivType2(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughSecondDerivativeType3:
-		BuildingTridiagonalMatrixSecondDerivType3(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixSecondDerivType3(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	case SplineRepresentationType::throughSecondDerivativeType4:
-		BuildingTridiagonalMatrixSecondDerivType4(x, n, h, matrix, d);
+		BuildingTridiagonalMatrixSecondDerivType4(x, n, h, matrix, d, FixedVariableValue, FixedVariable, tempCoefM);
 		break;
 	}
 
@@ -348,27 +513,34 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 
 #pragma region BuildingSpline
 /// <summary>
-/// Построение сплайна от одной переменной
+/// Построение сплайна от двух переменных
 /// </summary>
-double BuildingSpline(double* x, double* coefM, int n, double* h, double valueX, BuildingSplineType type) {
+double BuildingSpline(double* x, double* y, double** coefM, int nX, int nY, double* hX, double* hY, double valueX, double valueY, 
+						BuildingSplineType type, FixedVariableType FixedVariable, double* tempCoefM) {
 
-	int j = 0;
+	int j = 0, k = 0;
 
-	for (int i = 0; i < n; i++) {
+	for (int i = 0; i < nX; i++) {
 		if (valueX >= x[i] && valueX <= x[i + 1]) {
 			j = i;
 			break;
 		}
 	}
-
-	double t = (valueX - x[j]) / h[j];
+	for (int i = 0; i < nY; i++) {
+		if (valueY >= y[i] && valueY <= y[i + 1]) {
+			k = i;
+			break;
+		}
+	}
+	double t = (valueX - x[j]) / hX[j];
+	double u = (valueY - y[k]) / hY[k];
 
 	if (type == BuildingSplineType::BuildingSplineUsingFirstDerivative) {
-		return ExactSolution(x[j]) * pow(1 - t, 2) * (1 + 2 * t) + ExactSolution(x[j + 1]) * pow(t, 2) * (3 - 2 * t) + coefM[j] * h[j] * t * pow(1 - t, 2) - coefM[j + 1] * h[j] * pow(t, 2) * (1 - t);
+		return ;
 	}
 
 	if (type == BuildingSplineType::BuildingSplineUsingSecondDerivative) {
-		return ExactSolution(x[j]) * (1 - t) + ExactSolution(x[j + 1]) * t - coefM[j] * t * (1 - t) * (2 - t) * pow(h[j], 2) / 6 + coefM[j + 1] * t * (pow(t, 2) - 1) * pow(h[j], 2) / 6;
+		return ;
 	}
 }
 #pragma endregion

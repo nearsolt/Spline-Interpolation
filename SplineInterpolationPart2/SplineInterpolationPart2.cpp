@@ -5,20 +5,41 @@
 #include "AppliedMethods.h"
 using namespace std;
 
-//ifstream in("input.txt");
-ofstream out("D:\\1\\Documents\\SplineInterpolation2.txt");
+ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions3D.txt");
+ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation2.txt");
 
 
 int main()
 {
-	double a = -1, b = 24;
-	//double a = 0, b = 2 * 3.14159265358979323846;
-	//int n = 10;
-	//int n = 25;
-	int n = 40;
 
-	double* x = new double[n + 1];
-	double* h = new double[n];
+	int nX, nY;
+
+	if (!in.is_open()) {
+		cout << "Error, invalid input file";
+		return 0;
+	}
+	
+	in >> nX >> nY;
+	double* x = new double[nX + 1];
+	double* y = new double[nY + 1];
+
+	double* hX = new double[nX];
+	double* hY = new double[nY];
+
+	in >> x[0];
+	for (int i = 1; i <= nX; i++) {
+		in >> x[i];
+		hX[i - 1] = x[i] - x[i - 1];
+	}
+	in >> y[0];
+	for (int i = 1; i <= nY; i++) {
+		in >> y[i];
+		hY[i - 1] = y[i] - y[i - 1];
+	}
+	in.close();
+
+
+
 
 	double* approxValue = new double[8]();
 	double* maxApproxValue = new double[8]();
@@ -32,19 +53,7 @@ int main()
 	double* coefM_D2T3 = new double[n + 1];
 	double* coefM_D2T4 = new double[n + 1];
 
-	//initial conditions
-	x[0] = a;
-	x[n] = b;
 
-	double hUn = (b - a) / n;
-
-	for (int i = 0; i < n; i++) {
-		h[i] = hUn;
-	}
-
-	for (int i = 1; i < n; i++) {
-		x[i] = x[i - 1] + h[i - 1];
-	}
 
 	SweepMethod(x, coefM_D1T1, n, h, SplineRepresentationType::throughFirstDerivativeType1);
 	SweepMethod(x, coefM_D1T2, n, h, SplineRepresentationType::throughFirstDerivativeType2);
@@ -89,18 +98,7 @@ int main()
 
 	out.close();
 
-	delete[] x;
-	delete[] h;
-	delete[] approxValue;
-	delete[] maxApproxValue;
-	delete[] coefM_D1T1;
-	delete[] coefM_D1T2;
-	delete[] coefM_D1T3;
-	delete[] coefM_D1T4;
-	delete[] coefM_D2T1;
-	delete[] coefM_D2T2;
-	delete[] coefM_D2T3;
-	delete[] coefM_D2T4;
+
 
 	return 0;
 }
