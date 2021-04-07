@@ -14,8 +14,8 @@ int main() {
 
 #pragma region temp input
 
-	double a = 0, b = 32, c = 0, d = 32;
-	int nX = 24, nY = 24;
+	double a = 0, b = 8, c = 0, d = 8;
+	int nX = 16, nY = 16;
 
 #pragma endregion
 
@@ -126,8 +126,8 @@ int main() {
 		cout << "Error, invalid output file";
 		return 0;
 	}
-	for (double valOx = a; valOx <= b; valOx += 0.1) {
-		for (double valOy = c; valOy <= d; valOy += 0.1) {
+	for (double valOx = a; valOx <= b; valOx += 0.01) {
+		for (double valOy = c; valOy <= d; valOy += 0.01) {
 			out << valOx << ';' <<valOy << ';' << BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative)
 				<< ';' << ExactSolution(valOx, valOy)<<';'<<endl;
 			approxValue = fabs(BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(valOx, valOy));
