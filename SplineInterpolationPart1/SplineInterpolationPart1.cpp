@@ -11,22 +11,22 @@ ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation1.txt");
 
 int main(){
 
+#pragma region temp input
 
 	double a = -1, b = 24;
 	//double a = 0, b = 2 * 3.14159265358979323846;
 	//int n = 10;
 	//int n = 25;
 	int n = 40;
-
+#pragma endregion
 	
 	//int n;
-
 	//if (!in.is_open()) {
 	//	cout << "Error, invalid input file";
 	//	return 0;
 	//}
-	//
 	//in >> n;
+
 	double* x = new double[n + 1];
 	double* h = new double[n];
 
@@ -50,7 +50,7 @@ int main(){
 	double* coefM_D2T3 = new double[n + 1];
 	double* coefM_D2T4 = new double[n + 1];
 
-
+#pragma region temp initial conditions
 	//initial conditions
 	x[0] = a;
 	x[n] = b;
@@ -64,7 +64,7 @@ int main(){
 	for (int i = 1; i < n; i++) {
 		x[i] = x[i - 1] + h[i - 1];
 	}
-
+#pragma endregion
 
 	SweepMethod(x, coefM_D1T1, n, h, SplineRepresentationType::throughFirstDerivativeType1);
 	SweepMethod(x, coefM_D1T2, n, h, SplineRepresentationType::throughFirstDerivativeType2);

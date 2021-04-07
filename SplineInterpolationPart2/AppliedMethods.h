@@ -33,6 +33,33 @@ enum class FixedVariableType {
 };
 #pragma endregion
 
+#pragma region Support Function
+
+void calcPhi(double* phi, double h, double tau) {
+
+	phi[0] = pow(1 - tau, 2) * (1 + 2 * tau);
+	phi[1] = pow(tau, 2) * (3 - 2 * tau);
+	phi[2] = tau * pow(1 - tau, 2) * h;
+	phi[3] = pow(tau, 2) * (tau - 1) * h;
+}
+
+double multMatrix(double* matrixPhiT, double** matrixF, double* matrixPhiU) {
+	double* temp = new double[4];
+	double result = 0;
+
+	for (int i = 0; i < 4; i++) {
+		temp[i] = 0;
+		for (int j = 0; j < 4; j++) {
+			temp[i] += matrixPhiT[j] * matrixF[j][i];
+		}
+	}
+	for (int i = 0; i < 4; i++) {
+		result += temp[i] * matrixPhiU[i];
+	}
+	return result;
+}
+#pragma endregion
+
 #pragma region BoundaryConditions
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа I
@@ -515,32 +542,66 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 /// <summary>
 /// Построение сплайна от двух переменных
 /// </summary>
-double BuildingSpline(double* x, double* y, double** coefM, int nX, int nY, double* hX, double* hY, double valueX, double valueY, 
-						BuildingSplineType type, FixedVariableType FixedVariable, double* tempCoefM) {
+double BuildingSpline(double* x, double* y, double** coefM10, double** coefM01, double** coefM11, int nX, int nY, double* hX, double* hY, double valueX, double valueY,	BuildingSplineType type) {
 
-	int j = 0, k = 0;
+	int k = 0, l = 0;
 
 	for (int i = 0; i < nX; i++) {
 		if (valueX >= x[i] && valueX <= x[i + 1]) {
-			j = i;
-			break;
-		}
-	}
-	for (int i = 0; i < nY; i++) {
-		if (valueY >= y[i] && valueY <= y[i + 1]) {
 			k = i;
 			break;
 		}
 	}
-	double t = (valueX - x[j]) / hX[j];
-	double u = (valueY - y[k]) / hY[k];
+	for (int j = 0; j < nY; j++) {
+		if (valueY >= y[j] && valueY <= y[j + 1]) {
+			l = j;
+			break;
+		}
+	}
+	double t = (valueX - x[k]) / hX[k];
+	double u = (valueY - y[l]) / hY[l];
+
+	double** matrixF = new double* [4];
+	for (int i = 0; i < 4; i++) {
+		matrixF[i] = new double[4];
+	}
+	double* matrixPhiT = new double[4];
+	double* matrixPhiU = new double[4];
+	int val = 1;
+
+	if (type == BuildingSplineType::BuildingSplineUsingSecondDerivative) {
+		val = 6;
+	}
+
+	matrixF[0][0] = ExactSolution(x[k],y[l]);
+	matrixF[0][1] = ExactSolution(x[k + 1],y[l]);
+	matrixF[0][2] = coefM10[k][l] / val;
+	matrixF[0][3] = coefM10[k + 1][l] / val;
+
+	matrixF[1][0] = ExactSolution(x[k], y[l + 1]);
+	matrixF[1][1] = ExactSolution(x[k + 1], y[l + 1]);
+	matrixF[1][2] = coefM10[k][l + 1] / val;
+	matrixF[1][3] = coefM10[k + 1][l + 1] / val;
+
+	matrixF[2][0] = coefM01[k][l] / val;
+	matrixF[2][1] = coefM01[k + 1][l] / val;
+	matrixF[2][2] = coefM11[k][l] / val / val;
+	matrixF[2][3] = coefM11[k + 1][l] / val / val;
+
+	matrixF[3][0] = coefM01[k][l + 1] / val;
+	matrixF[3][1] = coefM01[k + 1][l + 1] / val;
+	matrixF[3][2] = coefM11[k][l + 1] / val / val;
+	matrixF[3][3] = coefM11[k + 1][l + 1] / val / val;
 
 	if (type == BuildingSplineType::BuildingSplineUsingFirstDerivative) {
-		return ;
+		calcPhi(matrixPhiT, hX[k], t);
+		calcPhi(matrixPhiU, hY[l], u);
+		return multMatrix(matrixPhiT, matrixF, matrixPhiU);
 	}
 
 	if (type == BuildingSplineType::BuildingSplineUsingSecondDerivative) {
-		return ;
+		return 0;
 	}
 }
 #pragma endregion
+

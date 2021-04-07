@@ -9,96 +9,135 @@ ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions3D.txt")
 ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation2.txt");
 
 
-int main()
-{
 
-	int nX, nY;
+int main() {
 
-	if (!in.is_open()) {
-		cout << "Error, invalid input file";
-		return 0;
-	}
-	
-	in >> nX >> nY;
+#pragma region temp input
+
+	double a = 0, b = 32, c = 0, d = 32;
+	int nX = 24, nY = 24;
+
+#pragma endregion
+
+	//int nX, nY;
+	//if (!in.is_open()) {
+	//	cout << "Error, invalid input file";
+	//	return 0;
+	//}
+	//in >> nX >> nY;
+
 	double* x = new double[nX + 1];
 	double* y = new double[nY + 1];
 
 	double* hX = new double[nX];
 	double* hY = new double[nY];
 
-	in >> x[0];
-	for (int i = 1; i <= nX; i++) {
-		in >> x[i];
-		hX[i - 1] = x[i] - x[i - 1];
+	//in >> x[0];
+	//for (int i = 1; i <= nX; i++) {
+	//	in >> x[i];
+	//	hX[i - 1] = x[i] - x[i - 1];
+	//}
+	//in >> y[0];
+	//for (int i = 1; i <= nY; i++) {
+	//	in >> y[i];
+	//	hY[i - 1] = y[i] - y[i - 1];
+	//}
+	//in.close();
+
+	double approxValue = 0, maxApproxValue = 0;
+
+	double** coefM10 = new double* [nX + 1];
+	double** coefM01 = new double* [nX + 1];
+	double** coefM11 = new double* [nX + 1];
+
+	for (int i = 0; i <= nX; i++) {
+		coefM10[i] = new double[nY];
+		coefM01[i] = new double[nY];
+		coefM11[i] = new double[nY];
 	}
-	in >> y[0];
-	for (int i = 1; i <= nY; i++) {
-		in >> y[i];
-		hY[i - 1] = y[i] - y[i - 1];
+
+#pragma region temp initial conditions
+	//initial conditions
+	x[0] = a;
+	x[nX] = b;
+	y[0] = c;
+	y[nY] = d;
+
+	double hUnX = (b - a) / nX;
+	double hUnY = (d - c) / nY;
+
+	for (int i = 0; i < nX; i++) {
+		hX[i] = hUnX;
 	}
-	in.close();
+	for (int i = 1; i < nX; i++) {
+		x[i] = x[i - 1] + hX[i - 1];
+	}
 
+	for (int i = 0; i < nY; i++) {
+		hY[i] = hUnY;
+	}
+	for (int i = 1; i < nY; i++) {
+		y[i] = y[i - 1] + hY[i - 1];
+	}
+#pragma endregion
 
+	double* tempArrayOx = new double[nX + 1];
+	double* tempArrayOy = new double[nY + 1];
+	double* skip = new double[nX + 1];
 
+#pragma region sweepMetod finding m01,m10,m11
+	//найдем m01 (II типа) по переменной  y с фиксированной переменной x
+	for (int i = 0; i <= nX; i++) {
+		for (int j = 0; j <= nY; j++) {
+			tempArrayOy[j] = 0;
+		}
+		SweepMethod(y, tempArrayOy, nY, hY, SplineRepresentationType::throughFirstDerivativeType2, x[i], FixedVariableType::FixedVariableX, skip);
+		for (int j = 0; j <= nY; j++) {
+			coefM01[i][j] = tempArrayOy[j];
+		}
+	}
 
-	double* approxValue = new double[8]();
-	double* maxApproxValue = new double[8]();
+	//найдем m10 (II типа) по переменной x с фиксированной переменной y
+	for (int j = 0; j <= nY; j++) {
+		for (int i = 0; i <= nX; i++) {
+			tempArrayOx[i] = 0;
+		}
+		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::FixedVariableY, skip);
+		for (int i = 0; i <= nX; i++) {
+			coefM10[i][j] = tempArrayOx[i];
+		}
+	}
 
-	double* coefM_D1T1 = new double[n + 1];
-	double* coefM_D1T2 = new double[n + 1];
-	double* coefM_D1T3 = new double[n + 1];
-	double* coefM_D1T4 = new double[n + 1];
-	double* coefM_D2T1 = new double[n + 1];
-	double* coefM_D2T2 = new double[n + 1];
-	double* coefM_D2T3 = new double[n + 1];
-	double* coefM_D2T4 = new double[n + 1];
+	//найдем m11 (II типа) по переменной x с фиксированной переменной y
+	for (int j = 0; j <= nY; j++) {
+		for (int i = 0; i <= nX; i++) {
+			tempArrayOx[i] = 0;
+			skip[i] = coefM01[i][j];
+		}
+		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::SecondCycle, skip);
+		for (int i = 0; i <= nX; i++) {
+			coefM11[i][j] = tempArrayOx[i];
+		}
+	}
+#pragma endregion
+	
 
-
-
-	SweepMethod(x, coefM_D1T1, n, h, SplineRepresentationType::throughFirstDerivativeType1);
-	SweepMethod(x, coefM_D1T2, n, h, SplineRepresentationType::throughFirstDerivativeType2);
-	SweepMethod(x, coefM_D1T3, n, h, SplineRepresentationType::throughFirstDerivativeType3);
-	SweepMethod(x, coefM_D1T4, n, h, SplineRepresentationType::throughFirstDerivativeType4);
-	SweepMethod(x, coefM_D2T1, n, h, SplineRepresentationType::throughSecondDerivativeType1);
-	SweepMethod(x, coefM_D2T2, n, h, SplineRepresentationType::throughSecondDerivativeType2);
-	SweepMethod(x, coefM_D2T3, n, h, SplineRepresentationType::throughSecondDerivativeType3);
-	SweepMethod(x, coefM_D2T4, n, h, SplineRepresentationType::throughSecondDerivativeType4);
-
-	for (double val = a; val <= b; val += 0.001) {
-
-		out << val << ';' << ExactSolution(val) << ';'
-			<< BuildingSpline(x, coefM_D1T1, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-			<< BuildingSpline(x, coefM_D1T2, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-			<< BuildingSpline(x, coefM_D1T3, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-			<< BuildingSpline(x, coefM_D1T4, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-			<< BuildingSpline(x, coefM_D2T1, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';'
-			<< BuildingSpline(x, coefM_D2T2, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';'
-			<< BuildingSpline(x, coefM_D2T3, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';'
-			<< BuildingSpline(x, coefM_D2T4, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';' << endl;
-
-		approxValue[0] = fabs(BuildingSpline(x, coefM_D1T1, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-		approxValue[1] = fabs(BuildingSpline(x, coefM_D1T2, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-		approxValue[2] = fabs(BuildingSpline(x, coefM_D1T3, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-		approxValue[3] = fabs(BuildingSpline(x, coefM_D1T4, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-		approxValue[4] = fabs(BuildingSpline(x, coefM_D2T1, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-		approxValue[5] = fabs(BuildingSpline(x, coefM_D2T2, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-		approxValue[6] = fabs(BuildingSpline(x, coefM_D2T3, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-		approxValue[7] = fabs(BuildingSpline(x, coefM_D2T4, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-
-		for (int i = 0; i < 8; i++) {
-			if (approxValue[i] > maxApproxValue[i]) {
-				maxApproxValue[i] = approxValue[i];
+	if (!out.is_open()) {
+		cout << "Error, invalid output file";
+		return 0;
+	}
+	for (double valOx = a; valOx <= b; valOx += 0.1) {
+		for (double valOy = c; valOy <= d; valOy += 0.1) {
+			out << valOx << ';' <<valOy << ';' << BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative)
+				<< ';' << ExactSolution(valOx, valOy)<<';'<<endl;
+			approxValue = fabs(BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(valOx, valOy));
+			if (approxValue > maxApproxValue) {
+				maxApproxValue = approxValue;
 			}
 		}
 	}
-	cout << "Max approx value \n" << endl;
-	for (int i = 0; i < 4; i++) {
-		cout << "using first deriv, type " << i + 1 << ": " << maxApproxValue[i] << "\t\t using second deriv, type " << i + 1 << ": " << maxApproxValue[i + 4] << endl;
-	}
-
 	out.close();
-
-
+	cout<< "Max approx value:" << maxApproxValue << endl;
 
 	return 0;
 }
