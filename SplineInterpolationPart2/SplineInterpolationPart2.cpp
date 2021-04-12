@@ -5,7 +5,7 @@
 #include "AppliedMethods.h"
 using namespace std;
 
-ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions3D.txt");
+//ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions3D.txt");
 ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation2.txt");
 
 
@@ -14,8 +14,8 @@ int main() {
 
 #pragma region temp input
 
-	double a = 0, b = 8, c = 0, d = 8;
-	int nX = 16, nY = 16;
+	double a = 0, b = 16, c = 0, d = 16;
+	int nX = 32, nY = 32;
 
 #pragma endregion
 
@@ -126,18 +126,44 @@ int main() {
 		cout << "Error, invalid output file";
 		return 0;
 	}
-	for (double valOx = a; valOx <= b; valOx += 0.01) {
-		for (double valOy = c; valOy <= d; valOy += 0.01) {
-			out << valOx << ';' <<valOy << ';' << BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative)
-				<< ';' << ExactSolution(valOx, valOy)<<';'<<endl;
+
+	int newNX = nX*16, newNY = nY*16;
+	
+	double newHX = (x[nX] - x[0]) / newNX;
+	double newHY = (y[nY] - y[0]) / newNY;
+	double valOx, valOy;
+
+	for (int i = 0; i <= newNX; i++) {
+		valOx = x[0] + newHX * i;
+		for (int j = 0; j <= newNY; j++) {
+			valOy = y[0] + newHY * j;
+			out << valOx << ';' << valOy << ';' << BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative)
+				<< ';' << ExactSolution(valOx, valOy) << ';' << endl;
 			approxValue = fabs(BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(valOx, valOy));
 			if (approxValue > maxApproxValue) {
 				maxApproxValue = approxValue;
 			}
 		}
 	}
+
 	out.close();
 	cout<< "Max approx value:" << maxApproxValue << endl;
+
+	delete[] x;
+	delete[] y;
+	delete[] hX;
+	delete[] hY;
+	/*for (int i = 0; i <= nX; i++) {
+		delete[] coefM10[i];
+		delete[] coefM11[i];
+		delete[] coefM01[i];
+	}
+	delete[] coefM10;
+	delete[] coefM01;
+	delete[] coefM11;*/
+	delete[] tempArrayOx;
+	delete[] tempArrayOy;
+	delete[] skip;
 
 	return 0;
 }

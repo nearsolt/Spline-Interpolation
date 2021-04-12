@@ -21,10 +21,37 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="3D.py">
+    <Compile Include="junk\3D.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="junk\module1.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Part2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SplineInterpolation.py" />
+    <Compile Include="junk\test.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="junk\test2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="junk\test3.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="junk\test4.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="junk\test5.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="junk\test6.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="junk\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
