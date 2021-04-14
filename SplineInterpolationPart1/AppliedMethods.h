@@ -16,20 +16,19 @@ enum class SplineRepresentationType {
 };
 
 /// <summary>
-/// Тип производной, которая используется для построение сплайна 
+/// Тип производной, который используется для построение сплайна 
 /// </summary>
 enum class BuildingSplineType {
-	BuildingSplineUsingFirstDerivative,
-	BuildingSplineUsingSecondDerivative
+	buildingSplineUsingFirstDerivative,
+	buildingSplineUsingSecondDerivative
 };
 #pragma endregion
 
-#pragma region BoundaryConditions
+#pragma region Boundary conditions
 /// <summary>
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа I
 /// </summary>
 void BuildingTridiagonalMatrixFirstDerivType1(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[0][0] = 1;												// coef for m_0
 	matrix[0][1] = 0;												// coef for m_1
 	matrix[n][n - 1] = 0;											// coef for m_N-1
@@ -53,7 +52,6 @@ void BuildingTridiagonalMatrixFirstDerivType1(double* x, int n, double* h, doubl
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа II
 /// </summary>
 void BuildingTridiagonalMatrixFirstDerivType2(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[0][0] = 2;												// coef for m_0
 	matrix[0][1] = 1;												// coef for m_1
 	matrix[n][n - 1] = 1;											// coef for m_N-1
@@ -77,7 +75,6 @@ void BuildingTridiagonalMatrixFirstDerivType2(double* x, int n, double* h, doubl
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа III
 /// </summary>
 void BuildingTridiagonalMatrixFirstDerivType3(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[1][1] = 2;												// coef for m_1
 	matrix[1][2] = h[0] / (h[0] + h[1]);							// coef for m_2
 	matrix[1][n] = h[1] / (h[0] + h[1]);							// coef for m_N
@@ -102,7 +99,6 @@ void BuildingTridiagonalMatrixFirstDerivType3(double* x, int n, double* h, doubl
 /// Построение диагональной матрицы сплайна, представленного через первую производную, с краевыми условиями типа IV
 /// </summary>
 void BuildingTridiagonalMatrixFirstDerivType4(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[0][0] = 1;												// coef for m_0
 	matrix[0][1] = 1 - pow(h[0] / h[1], 2);							// coef for m_1
 	matrix[0][2] = -pow(h[0] / h[1], 2);							// coef for m_2
@@ -134,7 +130,6 @@ void BuildingTridiagonalMatrixFirstDerivType4(double* x, int n, double* h, doubl
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа I
 /// </summary>
 void BuildingTridiagonalMatrixSecondDerivType1(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[0][0] = 2;												// coef for M_0
 	matrix[0][1] = 1;												// coef for M_1
 	matrix[n][n - 1] = 1;											// coef for M_N-1
@@ -158,7 +153,6 @@ void BuildingTridiagonalMatrixSecondDerivType1(double* x, int n, double* h, doub
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа II
 /// </summary>
 void BuildingTridiagonalMatrixSecondDerivType2(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[0][0] = 1;												// coef for M_0
 	matrix[0][1] = 0;												// coef for M_1
 	matrix[n][n - 1] = 0;											// coef for M_N-1
@@ -182,7 +176,6 @@ void BuildingTridiagonalMatrixSecondDerivType2(double* x, int n, double* h, doub
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа III
 /// </summary>
 void BuildingTridiagonalMatrixSecondDerivType3(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[1][1] = 2;															// coef for M_1
 	matrix[1][2] = h[1] / (h[0] + h[1]);										// coef for M_2
 	matrix[1][n] = h[0] / (h[0] + h[1]);										// coef for M_N
@@ -207,7 +200,6 @@ void BuildingTridiagonalMatrixSecondDerivType3(double* x, int n, double* h, doub
 /// Построение диагональной матрицы сплайна, представленного через вторую производную, с краевыми условиями типа IV
 /// </summary>
 void BuildingTridiagonalMatrixSecondDerivType4(double* x, int n, double* h, double** matrix, double* d) {
-
 	matrix[0][0] = 1;															// coef for M_0
 	matrix[0][1] = -(h[0] + h[1]) / h[1];										// coef for M_1
 	matrix[0][2] = h[0] / h[1];													// coef for M_2
@@ -234,12 +226,11 @@ void BuildingTridiagonalMatrixSecondDerivType4(double* x, int n, double* h, doub
 }
 #pragma endregion
 
-#pragma region SweepMethod
+#pragma region Sweep method
 /// <summary>
 /// Метод прогонки
 /// </summary>
 void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentationType bonCond) {
-
 	double* alpha = new double[n]();
 	double* beta = new double[n]();
 
@@ -253,34 +244,33 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 	coefM[n] = ExactSolution(x[n]);
 
 	switch (bonCond) {
-	case SplineRepresentationType::throughFirstDerivativeType1:
-		BuildingTridiagonalMatrixFirstDerivType1(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughFirstDerivativeType2:
-		BuildingTridiagonalMatrixFirstDerivType2(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughFirstDerivativeType3:
-		BuildingTridiagonalMatrixFirstDerivType3(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughFirstDerivativeType4:
-		BuildingTridiagonalMatrixFirstDerivType4(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughSecondDerivativeType1:
-		BuildingTridiagonalMatrixSecondDerivType1(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughSecondDerivativeType2:
-		BuildingTridiagonalMatrixSecondDerivType2(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughSecondDerivativeType3:
-		BuildingTridiagonalMatrixSecondDerivType3(x, n, h, matrix, d);
-		break;
-	case SplineRepresentationType::throughSecondDerivativeType4:
-		BuildingTridiagonalMatrixSecondDerivType4(x, n, h, matrix, d);
-		break;
+		case SplineRepresentationType::throughFirstDerivativeType1:
+			BuildingTridiagonalMatrixFirstDerivType1(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughFirstDerivativeType2:
+			BuildingTridiagonalMatrixFirstDerivType2(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughFirstDerivativeType3:
+			BuildingTridiagonalMatrixFirstDerivType3(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughFirstDerivativeType4:
+			BuildingTridiagonalMatrixFirstDerivType4(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughSecondDerivativeType1:
+			BuildingTridiagonalMatrixSecondDerivType1(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughSecondDerivativeType2:
+			BuildingTridiagonalMatrixSecondDerivType2(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughSecondDerivativeType3:
+			BuildingTridiagonalMatrixSecondDerivType3(x, n, h, matrix, d);
+			break;
+		case SplineRepresentationType::throughSecondDerivativeType4:
+			BuildingTridiagonalMatrixSecondDerivType4(x, n, h, matrix, d);
+			break;
 	}
 
 	if (bonCond == SplineRepresentationType::throughFirstDerivativeType3 || bonCond == SplineRepresentationType::throughSecondDerivativeType3) {
-
 		alpha[1] = -matrix[1][2] / matrix[1][1];
 		beta[1] = d[1] / matrix[1][1];
 
@@ -290,7 +280,6 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 		}
 	}
 	else {
-
 		alpha[0] = -matrix[0][1] / matrix[0][0];
 		beta[0] = d[0] / matrix[0][0];
 
@@ -314,12 +303,11 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 }
 #pragma endregion
 
-#pragma region BuildingSpline
+#pragma region Building spline
 /// <summary>
 /// Построение сплайна от одной переменной
 /// </summary>
 double BuildingSpline(double* x, double* coefM, int n, double* h, double valueX, BuildingSplineType type) {
-
 	int j = 0;
 
 	for (int i = 0; i < n; i++) {
@@ -331,11 +319,11 @@ double BuildingSpline(double* x, double* coefM, int n, double* h, double valueX,
 
 	double t = (valueX - x[j]) / h[j];
 
-	if (type == BuildingSplineType::BuildingSplineUsingFirstDerivative) {
+	if (type == BuildingSplineType::buildingSplineUsingFirstDerivative) {
 		return ExactSolution(x[j]) * pow(1 - t, 2) * (1 + 2 * t) + ExactSolution(x[j + 1]) * pow(t, 2) * (3 - 2 * t) + coefM[j] * h[j] * t * pow(1 - t, 2) - coefM[j + 1] * h[j] * pow(t, 2) * (1 - t);
 	}
 
-	if (type == BuildingSplineType::BuildingSplineUsingSecondDerivative) {
+	if (type == BuildingSplineType::buildingSplineUsingSecondDerivative) {
 		return ExactSolution(x[j]) * (1 - t) + ExactSolution(x[j + 1]) * t - coefM[j] * t * (1 - t) * (2 - t) * pow(h[j], 2) / 6 + coefM[j + 1] * t * (pow(t, 2) - 1) * pow(h[j], 2) / 6;
 	}
 }

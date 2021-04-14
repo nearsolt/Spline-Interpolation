@@ -1,6 +1,6 @@
 #include <cmath>
 
-#pragma region SplineDerivativesOfTwoVariables
+#pragma region Exact solution and spline derivatives of two variables
 /// <summary>
 /// Точное значение функции f в точке (x,y)
 /// </summary>

@@ -21,37 +21,44 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="junk\3D.py">
+    <Compile Include="JunkPart2\test0.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="junk\module1.py">
+    <Compile Include="JunkPart2\test1.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JunkPart2\test7.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Part1.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Part2.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SplineInterpolation.py" />
-    <Compile Include="junk\test.py">
+    <Compile Include="JunkPart2\test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="junk\test2.py">
+    <Compile Include="JunkPart2\test2.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="junk\test3.py">
+    <Compile Include="JunkPart2\test3.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="junk\test4.py">
+    <Compile Include="JunkPart2\test4.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="junk\test5.py">
+    <Compile Include="JunkPart2\test5.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="junk\test6.py">
+    <Compile Include="JunkPart2\test6.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="junk\" />
+    <Folder Include="JunkPart2\" />
+    <Folder Include="JunkPart1\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

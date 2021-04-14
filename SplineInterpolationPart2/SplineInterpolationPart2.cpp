@@ -8,12 +8,8 @@ using namespace std;
 //ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions3D.txt");
 ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation2.txt");
 
-
-
 int main() {
-
 #pragma region temp input
-
 	double a = 0, b = 16, c = 0, d = 16;
 	int nX = 32, nY = 32;
 
@@ -83,87 +79,91 @@ int main() {
 
 	double* tempArrayOx = new double[nX + 1];
 	double* tempArrayOy = new double[nY + 1];
-	double* skip = new double[nX + 1];
+	double* tempArrayOxForSecondCycle = new double[nX + 1];
 
-#pragma region sweepMetod finding m01,m10,m11
-	//найдем m01 (II типа) по переменной  y с фиксированной переменной x
+#pragma region Sweep method and finding values m01, m10, m11 
+	//Последовательность нахождения значений производных: m01 -> m10 -> m11
+	//Найдем m01 (II типа) по переменной  y с фиксированной переменной x
 	for (int i = 0; i <= nX; i++) {
 		for (int j = 0; j <= nY; j++) {
 			tempArrayOy[j] = 0;
 		}
-		SweepMethod(y, tempArrayOy, nY, hY, SplineRepresentationType::throughFirstDerivativeType2, x[i], FixedVariableType::FixedVariableX, skip);
+		SweepMethod(y, tempArrayOy, nY, hY, SplineRepresentationType::throughFirstDerivativeType2, x[i], FixedVariableType::firstCycleFixedVariableX, tempArrayOxForSecondCycle);
 		for (int j = 0; j <= nY; j++) {
 			coefM01[i][j] = tempArrayOy[j];
 		}
 	}
-
-	//найдем m10 (II типа) по переменной x с фиксированной переменной y
+	//Найдем m10 (II типа) по переменной x с фиксированной переменной y
 	for (int j = 0; j <= nY; j++) {
 		for (int i = 0; i <= nX; i++) {
 			tempArrayOx[i] = 0;
 		}
-		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::FixedVariableY, skip);
+		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::firstCycleFixedVariableY, tempArrayOxForSecondCycle);
 		for (int i = 0; i <= nX; i++) {
 			coefM10[i][j] = tempArrayOx[i];
 		}
 	}
-
-	//найдем m11 (II типа) по переменной x с фиксированной переменной y
+	//Найдем m11 (II типа) по переменной x с фиксированной переменной y
 	for (int j = 0; j <= nY; j++) {
 		for (int i = 0; i <= nX; i++) {
 			tempArrayOx[i] = 0;
-			skip[i] = coefM01[i][j];
+			tempArrayOxForSecondCycle[i] = coefM01[i][j];
 		}
-		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::SecondCycle, skip);
+		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::secondCycleFixedVariableY, tempArrayOxForSecondCycle);
 		for (int i = 0; i <= nX; i++) {
 			coefM11[i][j] = tempArrayOx[i];
 		}
 	}
 #pragma endregion
 	
-
 	if (!out.is_open()) {
 		cout << "Error, invalid output file";
 		return 0;
 	}
 
-	int newNX = nX*16, newNY = nY*16;
+	int newNX = (x[nX] - x[0]) * 32; 
+	int newNY = (y[nY] - y[0]) * 32;
 	
 	double newHX = (x[nX] - x[0]) / newNX;
 	double newHY = (y[nY] - y[0]) / newNY;
-	double valOx, valOy;
+	double valOx, valOy, spline;
 
 	for (int i = 0; i <= newNX; i++) {
 		valOx = x[0] + newHX * i;
 		for (int j = 0; j <= newNY; j++) {
 			valOy = y[0] + newHY * j;
-			out << valOx << ';' << valOy << ';' << BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative)
-				<< ';' << ExactSolution(valOx, valOy) << ';' << endl;
-			approxValue = fabs(BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(valOx, valOy));
+
+			spline = BuildingSpline(x, y, coefM10, coefM01, coefM11, nX, nY, hX, hY, valOx, valOy, BuildingSplineType::buildingSplineUsingFirstDerivative);
+
+			out << valOx << ';' << valOy << ';' << spline << ';' << ExactSolution(valOx, valOy) << ';' << endl;
+			approxValue = fabs(spline - ExactSolution(valOx, valOy));
+			
 			if (approxValue > maxApproxValue) {
 				maxApproxValue = approxValue;
 			}
 		}
 	}
-
 	out.close();
+
 	cout<< "Max approx value:" << maxApproxValue << endl;
+
+
 
 	delete[] x;
 	delete[] y;
 	delete[] hX;
 	delete[] hY;
-	/*for (int i = 0; i <= nX; i++) {
-		delete[] coefM10[i];
-		delete[] coefM11[i];
-		delete[] coefM01[i];
-	}
-	delete[] coefM10;
-	delete[] coefM01;
-	delete[] coefM11;*/
+	//for (int i = 0; i <= nX; i++) {
+	//	delete[] coefM10[i];
+	//	delete[] coefM01[i];
+	//	delete[] coefM11[i];
+	//}
+	//delete[] coefM10;
+	//delete[] coefM01;
+	//delete[] coefM11;
 	delete[] tempArrayOx;
 	delete[] tempArrayOy;
-	delete[] skip;
+	delete[] tempArrayOxForSecondCycle;
 
 	return 0;
 }

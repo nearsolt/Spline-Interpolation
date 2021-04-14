@@ -6,7 +6,7 @@
 
 using namespace std;
 
-ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions.txt");
+//ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions.txt");
 ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation1.txt");
 
 int main(){
@@ -17,7 +17,7 @@ int main(){
 	//double a = 0, b = 2 * 3.14159265358979323846;
 	//int n = 10;
 	//int n = 25;
-	int n = 40;
+	int n = 50;
 #pragma endregion
 	
 	//int n;
@@ -36,7 +36,6 @@ int main(){
 	//	h[i - 1] = x[i] - x[i - 1];
 	//}
 	//in.close();
-	
 	
 	double* approxValue = new double[8]();
 	double* maxApproxValue = new double[8]();
@@ -75,46 +74,53 @@ int main(){
 	SweepMethod(x, coefM_D2T3, n, h, SplineRepresentationType::throughSecondDerivativeType3);
 	SweepMethod(x, coefM_D2T4, n, h, SplineRepresentationType::throughSecondDerivativeType4);
 
-	if (out.is_open()) {
-		for (double val = a; val <= b; val += 0.001) {
+	if (!out.is_open()) {
+		cout << "Error, invalid output file";
+		return 0;
+	}
 
-			out << val << ';' << ExactSolution(val) << ';'
-				<< BuildingSpline(x, coefM_D1T1, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-				<< BuildingSpline(x, coefM_D1T2, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-				<< BuildingSpline(x, coefM_D1T3, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-				<< BuildingSpline(x, coefM_D1T4, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) << ';'
-				<< BuildingSpline(x, coefM_D2T1, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';'
-				<< BuildingSpline(x, coefM_D2T2, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';'
-				<< BuildingSpline(x, coefM_D2T3, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';'
-				<< BuildingSpline(x, coefM_D2T4, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) << ';' << endl;
+	int newN = (x[n] - x[0]) * 1000;
+	double newH = (x[n] - x[0]) / newN;
+	double valOx;
+	double* spline = new double[8];
 
-			approxValue[0] = fabs(BuildingSpline(x, coefM_D1T1, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-			approxValue[1] = fabs(BuildingSpline(x, coefM_D1T2, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-			approxValue[2] = fabs(BuildingSpline(x, coefM_D1T3, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-			approxValue[3] = fabs(BuildingSpline(x, coefM_D1T4, n, h, val, BuildingSplineType::BuildingSplineUsingFirstDerivative) - ExactSolution(val));
-			approxValue[4] = fabs(BuildingSpline(x, coefM_D2T1, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-			approxValue[5] = fabs(BuildingSpline(x, coefM_D2T2, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-			approxValue[6] = fabs(BuildingSpline(x, coefM_D2T3, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
-			approxValue[7] = fabs(BuildingSpline(x, coefM_D2T4, n, h, val, BuildingSplineType::BuildingSplineUsingSecondDerivative) - ExactSolution(val));
+	for (int i = 0; i <= newN; i++) {
+		valOx = x[0] + newH * i;
+		
+		spline[0] = BuildingSpline(x, coefM_D1T1, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
+		spline[1] = BuildingSpline(x, coefM_D1T2, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
+		spline[2] = BuildingSpline(x, coefM_D1T3, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
+		spline[3] = BuildingSpline(x, coefM_D1T4, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
+		spline[4] = BuildingSpline(x, coefM_D2T1, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
+		spline[5] = BuildingSpline(x, coefM_D2T2, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
+		spline[6] = BuildingSpline(x, coefM_D2T3, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
+		spline[7] = BuildingSpline(x, coefM_D2T4, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
 
-			for (int i = 0; i < 8; i++) {
-				if (approxValue[i] > maxApproxValue[i]) {
-					maxApproxValue[i] = approxValue[i];
-				}
+		out << valOx << ';' << ExactSolution(valOx) << ';';
+		for (int i = 0; i < 8; i++, out << ';') {
+			out << spline[i];
+		}
+		out << endl;
+
+		for (int i = 0; i < 8; i++) {
+			approxValue[i] = fabs(spline[i] - ExactSolution(valOx));
+			if (approxValue[i] > maxApproxValue[i]) {
+				maxApproxValue[i] = approxValue[i];
 			}
 		}
 	}
 	out.close();
 
-	cout << "Max approx value \n" << endl;
+	cout << "Max approx value: \n" << endl;
 	for (int i = 0; i < 4; i++) {
-		cout << "using first deriv, type " << i + 1 << ": " << maxApproxValue[i] << "\t\t using second deriv, type " << i + 1 << ": " << maxApproxValue[i + 4] << endl;
+		cout << "first deriv, type " << i + 1 << ": " << maxApproxValue[i] << "\t\t second deriv, type " << i + 1 << ": " << maxApproxValue[i + 4] << endl;
 	}
 
 	delete[] x;
 	delete[] h;
 	delete[] approxValue;
 	delete[] maxApproxValue;
+	delete[] spline;
 	delete[] coefM_D1T1;
 	delete[] coefM_D1T2;
 	delete[] coefM_D1T3;
