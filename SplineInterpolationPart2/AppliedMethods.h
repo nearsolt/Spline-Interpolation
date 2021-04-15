@@ -564,7 +564,7 @@ void SweepMethod(double* x, double* coefM, int n, double* h, SplineRepresentatio
 /// <summary>
 /// ѕостроение сплайна от двух переменных
 /// </summary>
-double BuildingSpline(double* x, double* y, double** coefM10, double** coefM01, double** coefM11, int nX, int nY, double* hX, double* hY, double valueX, double valueY,	BuildingSplineType type) {
+double BuildingSpline(double* x, double* y, double** coefM01, double** coefM10, double** coefM11, int nX, int nY, double* hX, double* hY, double valueX, double valueY,	BuildingSplineType type) {
 	int k = 0, l = 0;
 
 	for (int i = 0; i < nX; i++) {

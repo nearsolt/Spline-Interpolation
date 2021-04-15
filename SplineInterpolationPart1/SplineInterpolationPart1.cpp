@@ -6,8 +6,8 @@
 
 using namespace std;
 
-//ifstream in("C:\\Users\\1\\source\\repos\\Diplom\\InputInitialConditions.txt");
-ofstream out("C:\\Users\\1\\source\\repos\\Diplom\\SplineInterpolation1.txt");
+//ifstream in("..\\InputInitialConditions.txt");
+ofstream out("..\\SplineInterpolation1.txt");
 
 int main(){
 

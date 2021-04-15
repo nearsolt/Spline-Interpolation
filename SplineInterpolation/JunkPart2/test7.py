@@ -45,4 +45,13 @@ if __name__ == "__main__":
     #color='#6bfffd')#cmap= cm.spring,winter,autumn,summer)
     #fig.tight_layout()
 
+    
+   #ax4.legend(fontsize = 25,
+    #      ncol = 3,    #  количество столбцов
+    #      facecolor = 'oldlace',    #  цвет области
+          #edgecolor = 'g',    #  цвет крайней линии
+          #title = 'Spline',    #  заголовок
+          #title_fontsize = '10'    #  размер шрифта заголовка
+         #)
+
     plt.show() 
