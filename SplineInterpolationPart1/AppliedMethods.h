@@ -19,8 +19,8 @@ enum class SplineRepresentationType {
 /// Тип производной, который используется для построение сплайна 
 /// </summary>
 enum class BuildingSplineType {
-	buildingSplineUsingFirstDerivative,
-	buildingSplineUsingSecondDerivative
+	buildingSplineUsingFirstDerivative = 0,
+	buildingSplineUsingSecondDerivative = 1
 };
 #pragma endregion
 

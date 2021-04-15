@@ -44,15 +44,6 @@ int main(){
 	}
 	double* temp = new double[n + 1];
 
-	//double* coefM_D1T1 = new double[n + 1];
-	//double* coefM_D1T2 = new double[n + 1];
-	//double* coefM_D1T3 = new double[n + 1];
-	//double* coefM_D1T4 = new double[n + 1];
-	//double* coefM_D2T1 = new double[n + 1];
-	//double* coefM_D2T2 = new double[n + 1];
-	//double* coefM_D2T3 = new double[n + 1];
-	//double* coefM_D2T4 = new double[n + 1];
-
 #pragma region temp initial conditions
 	//initial conditions
 	x[0] = a;
@@ -79,15 +70,6 @@ int main(){
 		}
 	}
 
-	//SweepMethod(x, coefM_D1T1, n, h, SplineRepresentationType::throughFirstDerivativeType1);
-	//SweepMethod(x, coefM_D1T2, n, h, SplineRepresentationType::throughFirstDerivativeType2);
-	//SweepMethod(x, coefM_D1T3, n, h, SplineRepresentationType::throughFirstDerivativeType3);
-	//SweepMethod(x, coefM_D1T4, n, h, SplineRepresentationType::throughFirstDerivativeType4);
-	//SweepMethod(x, coefM_D2T1, n, h, SplineRepresentationType::throughSecondDerivativeType1);
-	//SweepMethod(x, coefM_D2T2, n, h, SplineRepresentationType::throughSecondDerivativeType2);
-	//SweepMethod(x, coefM_D2T3, n, h, SplineRepresentationType::throughSecondDerivativeType3);
-	//SweepMethod(x, coefM_D2T4, n, h, SplineRepresentationType::throughSecondDerivativeType4);
-
 	if (!out.is_open()) {
 		cout << "Error, invalid output file";
 		return 0;
@@ -104,15 +86,14 @@ int main(){
 			for (int k = 0; k <= n; k++) {
 				temp[k] = coefM[j][k];
 			}
-			spline[j] = BuildingSpline(x, temp, n, h, valOx, (BuildingSplineType)j);
-			//spline[1] = BuildingSpline(x, coefM_D1T2, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
-			//spline[2] = BuildingSpline(x, coefM_D1T3, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
-			//spline[3] = BuildingSpline(x, coefM_D1T4, n, h, valOx, BuildingSplineType::buildingSplineUsingFirstDerivative);
-			//spline[4] = BuildingSpline(x, coefM_D2T1, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
-			//spline[5] = BuildingSpline(x, coefM_D2T2, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
-			//spline[6] = BuildingSpline(x, coefM_D2T3, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
-			//spline[7] = BuildingSpline(x, coefM_D2T4, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
+			if (j < 4) {
+				spline[j] = BuildingSpline(x, temp, n, h, valOx, (BuildingSplineType)0);
+			}
+			else {
+				spline[j] = BuildingSpline(x, temp, n, h, valOx, (BuildingSplineType)1);
+			}
 		}
+			
 		out << valOx << ';' << ExactSolution(valOx) << ';';
 		for (int j = 0; j < 8; j++, out << ';') {
 			out << spline[j];
@@ -137,15 +118,13 @@ int main(){
 	delete[] h;
 	delete[] approxValue;
 	delete[] maxApproxValue;
-	delete[] spline;
+
+	for (int i = 0; i < 8; i++) {
+		delete coefM[i];
+	}
 	delete[] coefM;
 	delete[] temp;
-	//delete[] coefM_D1T3;
-	//delete[] coefM_D1T4;
-	//delete[] coefM_D2T1;
-	//delete[] coefM_D2T2;
-	//delete[] coefM_D2T3;
-	//delete[] coefM_D2T4;
+	delete[] spline;
 
 	return 0;
 }
