@@ -88,7 +88,7 @@ int main() {
 		for (int j = 0; j <= nY; j++) {
 			tempArrayOy[j] = 0;
 		}
-		SweepMethod(y, tempArrayOy, nY, hY, SplineRepresentationType::throughFirstDerivativeType2, x[i], FixedVariableType::firstCycleFixedVariableX, tempArrayOxForSecondCycle);
+		SweepMethod(y, tempArrayOy, nY, hY, SplineRepresentationType::throughSecondDerivativeType2, x[i], FixedVariableType::firstCycleFixedVariableX, tempArrayOxForSecondCycle);
 		for (int j = 0; j <= nY; j++) {
 			coefM01[i][j] = tempArrayOy[j];
 		}
@@ -98,7 +98,7 @@ int main() {
 		for (int i = 0; i <= nX; i++) {
 			tempArrayOx[i] = 0;
 		}
-		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::firstCycleFixedVariableY, tempArrayOxForSecondCycle);
+		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughSecondDerivativeType2, y[j], FixedVariableType::firstCycleFixedVariableY, tempArrayOxForSecondCycle);
 		for (int i = 0; i <= nX; i++) {
 			coefM10[i][j] = tempArrayOx[i];
 		}
@@ -109,7 +109,7 @@ int main() {
 			tempArrayOx[i] = 0;
 			tempArrayOxForSecondCycle[i] = coefM01[i][j];
 		}
-		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughFirstDerivativeType2, y[j], FixedVariableType::secondCycleFixedVariableY, tempArrayOxForSecondCycle);
+		SweepMethod(x, tempArrayOx, nX, hX, SplineRepresentationType::throughSecondDerivativeType2, y[j], FixedVariableType::secondCycleFixedVariableY, tempArrayOxForSecondCycle);
 		for (int i = 0; i <= nX; i++) {
 			coefM11[i][j] = tempArrayOx[i];
 		}
