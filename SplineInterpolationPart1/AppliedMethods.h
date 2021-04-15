@@ -5,14 +5,14 @@
 /// Производная, через которую представляем сплайн, и тип краевых условий
 /// </summary>
 enum class SplineRepresentationType {
-	throughFirstDerivativeType1,
-	throughFirstDerivativeType2,
-	throughFirstDerivativeType3,
-	throughFirstDerivativeType4,
-	throughSecondDerivativeType1,
-	throughSecondDerivativeType2,
-	throughSecondDerivativeType3,
-	throughSecondDerivativeType4
+	throughFirstDerivativeType1 = 0,
+	throughFirstDerivativeType2 = 1,
+	throughFirstDerivativeType3 = 2,
+	throughFirstDerivativeType4 = 3,
+	throughSecondDerivativeType1 = 4,
+	throughSecondDerivativeType2 = 5,
+	throughSecondDerivativeType3 = 6,
+	throughSecondDerivativeType4 = 7
 };
 
 /// <summary>
