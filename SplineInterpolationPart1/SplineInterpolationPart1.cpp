@@ -97,15 +97,15 @@ int main(){
 		spline[7] = BuildingSpline(x, coefM_D2T4, n, h, valOx, BuildingSplineType::buildingSplineUsingSecondDerivative);
 
 		out << valOx << ';' << ExactSolution(valOx) << ';';
-		for (int i = 0; i < 8; i++, out << ';') {
-			out << spline[i];
+		for (int j = 0; j < 8; j++, out << ';') {
+			out << spline[j];
 		}
 		out << endl;
 
-		for (int i = 0; i < 8; i++) {
-			approxValue[i] = fabs(spline[i] - ExactSolution(valOx));
-			if (approxValue[i] > maxApproxValue[i]) {
-				maxApproxValue[i] = approxValue[i];
+		for (int j = 0; j < 8; j++) {
+			approxValue[j] = fabs(spline[j] - ExactSolution(valOx));
+			if (approxValue[j] > maxApproxValue[j]) {
+				maxApproxValue[j] = approxValue[j];
 			}
 		}
 	}
