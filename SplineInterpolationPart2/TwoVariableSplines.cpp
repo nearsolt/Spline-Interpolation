@@ -58,23 +58,33 @@ void FindingDerivatives(double* x, double nX, double* hX, double*y, double nY, d
 #pragma endregion
 
 int main() {
-#pragma region temp input1 было седло
-	double a = -10, b = 10, c = -10, d = 10;
-	int nX = 200, nY = 200;
+#pragma region temp input1 
+	//double a = -5, b = 5, c = -2, d = 5;
+
+	//int nX = (b - a) * 2, nY = (d - c) * 2; //test1
+	//int nX = (b - a) * 5, nY = (d - c) * 5; //test2
+	//int nX = (b - a) * 10, nY = (d - c) * 10; //test3 build
+#pragma endregion
+
+#pragma region temp input2  для первой бяки
+	//double a = 8, b = 16, c = 8, d = 16;
+
+	//int nX = (b - a) * 2, nY = (d - c) * 2; //test1
+	//int nX = (b - a) * 5, nY = (d - c) * 5; //test2
+	//int nX = (b - a) * 10, nY = (d - c) * 10; //test3
+	//int nX = (b - a) * 20, nY = (d - c) * 20; //test4 build
 
 #pragma endregion
 
-//#pragma region temp input2 вопрос
-//	double a = 8, b = 16, c = 8, d = 16;
-//	int nX = 32, nY = 32;
-//
-//#pragma endregion
-//
-//#pragma region temp input3  для первой бяки
-//	double a = 8, b = 16, c = 8, d = 16;
-//	int nX = 32, nY = 32;
-//
-//#pragma endregion
+#pragma region temp input3 вопрос
+	double a = 2, b = 4, c = 0, d = 5;
+
+	//int nX = (b - a) * 2, nY = (d - c) * 2; //test1
+	//int nX = (b - a) * 5, nY = (d - c) * 5; //test2
+	int nX = (b - a) * 10, nY = (d - c) * 10; //test3
+	//int nX = (b - a) * 20, nY = (d - c) * 20; //test4 build
+
+#pragma endregion
 
 	//int nX, nY;
 	//if (!in.is_open()) {
@@ -152,8 +162,14 @@ int main() {
 	FindingDerivatives(x, nX, hX, y, nY, hY, coefM01, coefM10, coefM11, SplineRepresentationType::throughFirstDerivativeType2, SplineRepresentationType::throughFirstDerivativeType2);
 	FindingDerivatives(x, nX, hX, y, nY, hY, coefM02, coefM20, coefM22, SplineRepresentationType::throughSecondDerivativeType2, SplineRepresentationType::throughSecondDerivativeType2);
 
-	int newNX = (x[nX] - x[0]) * 50; 
-	int newNY = (y[nY] - y[0]) * 50;
+	//int newNX = (x[nX] - x[0]) * 25; 
+	//int newNY = (y[nY] - y[0]) * 25;
+
+	//int newNX = (x[nX] - x[0]) * 50;
+	//int newNY = (y[nY] - y[0]) * 50;
+
+	int newNX = (x[nX] - x[0]) * 100;
+	int newNY = (y[nY] - y[0]) * 100;
 	
 	double newHX = (x[nX] - x[0]) / newNX;
 	double newHY = (y[nY] - y[0]) / newNY;

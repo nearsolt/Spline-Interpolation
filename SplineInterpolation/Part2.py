@@ -30,7 +30,9 @@ if __name__ == "__main__":
     ax1.set_xlabel('X-axis', fontweight ='bold') 
     ax1.set_ylabel('Y-axis', fontweight ='bold') 
     ax1.set_zlabel('Z-axis', fontweight ='bold')
-    #plt.show() 
+    fig1.colorbar(surf1)
+    
+    plt.show() 
      
     fig2 = plt.figure(figsize=(7, 7))
     ax2 = fig2.add_subplot(111, projection='3d')
@@ -40,7 +42,8 @@ if __name__ == "__main__":
     ax2.set_xlabel('X-axis', fontweight ='bold') 
     ax2.set_ylabel('Y-axis', fontweight ='bold') 
     ax2.set_zlabel('Z-axis', fontweight ='bold')
-    #plt.show() 
+    fig2.colorbar(surf2)
+    plt.show() 
     
     fig3 = plt.figure(figsize=(7, 7))
     ax3 = fig3.add_subplot(111, projection='3d')
@@ -50,4 +53,5 @@ if __name__ == "__main__":
     ax3.set_xlabel('X-axis', fontweight ='bold') 
     ax3.set_ylabel('Y-axis', fontweight ='bold') 
     ax3.set_zlabel('Z-axis', fontweight ='bold')
+    fig3.colorbar(surf3)
     plt.show() 
