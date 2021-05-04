@@ -140,7 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SplineInterpolationPart1.cpp" />
+    <ClCompile Include="OneVariableSplines.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppliedMethods.h" />

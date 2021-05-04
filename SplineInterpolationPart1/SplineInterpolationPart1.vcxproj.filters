@@ -23,7 +23,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SplineInterpolationPart1.cpp">
+    <ClCompile Include="OneVariableSplines.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
